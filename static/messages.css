@@ -1,0 +1,100 @@
+#messages {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+#messages > :nth-child(3n+1) {
+    text-align: right;
+}
+
+#messages > :nth-child(3n+1),
+#messages > :nth-child(3n+2) {
+    padding: 5px;
+}
+
+#messages > :nth-child(3n+3) {
+    border: 0;
+}
+
+#messages > :nth-child(3n+3):hover {
+    color: #6495ed;
+}
+
+#messages > :nth-child(3n+1),
+#messages > :nth-child(3n+2),
+#messages > :nth-child(3n+3) {
+    background-color: #fff;
+}
+
+#messages > :nth-child(6n+1),
+#messages > :nth-child(6n+2),
+#messages > :nth-child(6n+3) {
+    background-color: #f0f0f0;
+}
+
+.message-content {
+    grid-column: 2;
+    word-break: break-word;
+}
+
+#messages > select:nth-child(3n+1) {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-right: 0;
+    border-top: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+    outline: 0;
+}
+
+#messages > textarea:nth-child(3n+2) {
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    font-family: inherit;
+    font-size: inherit;
+    outline: 0;
+    resize: vertical;
+}
+
+#messages > :first-child {
+    border-left: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    border-top-left-radius: 5px;
+}
+
+#messages > :nth-child(2),
+#messages > :nth-child(3) {
+    border-top: 1px solid #ccc;
+}
+
+#messages > :nth-child(3) {
+    border-top-right-radius: 5px;
+}
+
+#messages > :nth-child(3n+1) {
+    border-left: 1px solid #ccc;
+}
+
+#messages > :nth-child(3n+3) {
+    border-right: 1px solid #ccc;
+}
+
+#messages > :nth-last-child(3) {
+    border-bottom: 1px solid #ccc;
+    border-bottom-left-radius: 5px;
+}
+
+#messages > :nth-last-child(2) {
+    border-bottom: 1px solid #ccc;
+}
+
+#messages > :last-child {
+    border-bottom: 1px solid #ccc;
+    border-bottom-right-radius: 5px;
+}

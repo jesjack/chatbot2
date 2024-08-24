@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ chat.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='messages.css') }}">
+</head>
+<body>
+    <h1>Chat: {{ chat.title }}</h1>
+
+    <form id="message-form" method="post">
+
+        <div id="messages">
+            {% for message in messages %}
+                <strong>{{ message.user.username }}:</strong>
+                <div class="message-content" contenteditable="false">{{ message.content|safe }}</div>
+                <button class="edit-button">✎</button>
+            {% endfor %}
+            <select id="bot_username" name="bot_username">
+                <option value="">{{ nickname }}:</option>
+                {% for bot in bots %}
+                    <option value="{{ bot.user.username }}">{{ bot.user.username }}:</option>
+                {% endfor %}
+            </select>
+            <textarea id="content" name="content" class="message-content"></textarea>
+            <button type="submit">→</button>
+        </div>
+
+    </form>
+    <p><a href="{{ url_for('create_bot') }}">Crear un nuevo bot</a></p>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
