@@ -4,30 +4,42 @@
     <meta charset="UTF-8">
     <title>{{ chat.title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='messages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='map.css') }}">
 </head>
 <body>
     <h1>Chat: {{ chat.title }}</h1>
 
-    <form id="message-form" method="post">
-
-        <div id="messages">
-            {% for message in messages %}
-                <strong>{{ message.user.username }}:</strong>
-                <div class="message-content" contenteditable="false">{{ message.content|safe }}</div>
-                <button class="edit-button">✎</button>
-            {% endfor %}
-            <select id="bot_username" name="bot_username">
-                <option value="">{{ nickname }}:</option>
-                {% for bot in bots %}
-                    <option value="{{ bot.user.username }}">{{ bot.user.username }}:</option>
+    <main>
+        <form id="message-form" method="post">
+            <div id="messages">
+                {% for message in messages %}
+                    <strong>{{ message.user.username }}:</strong>
+                    <div class="message-content" contenteditable="false" data-id="{{ message.id }}">{{ message.content|safe }}</div>
+                    <button class="edit-button" type="button">🖉</button>
                 {% endfor %}
-            </select>
-            <textarea id="content" name="content" class="message-content"></textarea>
-            <button type="submit">→</button>
-        </div>
+                <select id="bot_username" name="user_id">
+                    <option value="{{ user.id }}">{{ nickname }}:</option>
+                    {% for bot in bots %}
+                        <option value="{{ bot.user.id }}">{{ bot.user.username }}:</option>
+                    {% endfor %}
+                </select>
+                <textarea id="content" name="content" class="message-content"></textarea>
+                <button type="submit">→</button>
+            </div>
+        </form>
+        <div class="map" id="map">
 
-    </form>
+        </div>
+    </main>
     <p><a href="{{ url_for('create_bot') }}">Crear un nuevo bot</a></p>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='arrow.js') }}"></script>
+    <script src="{{ url_for('static', filename='map.js') }}"></script>
+    <script !src="">
+        const tree = JSON.parse('{{ tree|tojson }}');
+        tree.forEach((node) => {
+            addToTree(node);
+        });
+    </script>
 </body>
 </html>

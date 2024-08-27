@@ -17,9 +17,33 @@ class Bot(BaseModel):
     user = ForeignKeyField(User, backref='bot_profile')  # Relación con el usuario
     personality = TextField()  # Ficha de personaje: descripción de la personalidad
 
+# Modelo para los mensajes
+class Message(BaseModel):
+    user = ForeignKeyField(User, backref='messages')  # Usuario que envió el mensaje
+    content = TextField()  # Contenido del mensaje
+    timestamp = DateTimeField(constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')])  # Hora del mensaje
+    parent_message = ForeignKeyField('self', backref='replies', null=True)  # Mensaje al que respondemos
+
+    @classmethod
+    def create(cls, **query):
+        with db.atomic():  # Inicia una transacción
+            instance = super().create(**query)
+            if not instance.parent_message:
+                Branch.create(tip_message=instance)
+            else:
+                updated = Branch.update(tip_message=instance).where(
+                    Branch.tip_message == instance.parent_message).execute()
+                if updated == 0:
+                    Branch.create(tip_message=instance)
+        return instance
+
+class Branch(BaseModel):
+    tip_message = ForeignKeyField(Message, backref='branches_as_tip')  # Mensaje al que pertenece la rama
+
 # Modelo para los chats
 class Chat(BaseModel):
     title = CharField()  # Título o nombre del chat
+    current_branch = ForeignKeyField(Branch, backref='chat', null=True)  # Rama actual del chat
 
 # Modelo para los nicknames en chats
 class ChatNickname(BaseModel):
@@ -32,9 +56,6 @@ class ChatNickname(BaseModel):
             (('user', 'chat'), True),  # Índice único para evitar duplicados de user-chat
         )
 
-# Modelo para los mensajes
-class Message(BaseModel):
-    chat = ForeignKeyField(Chat, backref='messages')  # Chat en el que se envió el mensaje
-    user = ForeignKeyField(User, backref='messages')  # Usuario que envió el mensaje
-    content = TextField()  # Contenido del mensaje
-    timestamp = DateTimeField(constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')])  # Hora del mensaje
+class RootMessage(BaseModel):
+    chat = ForeignKeyField(Chat, backref='root_messages')  # Chat al que pertenece el mensaje
+    message = ForeignKeyField(Message, backref='root_message', unique=True)  # Mensaje raíz del chat

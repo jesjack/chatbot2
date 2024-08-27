@@ -3,6 +3,35 @@ document.addEventListener('DOMContentLoaded', function () {
     const textarea = document.getElementById('content');
     const editButtons = document.querySelectorAll('.edit-button');
 
+    function saveMessage(messageDiv, button) {
+        const messageId = messageDiv.getAttribute('data-id');
+        const newContent = messageDiv.innerHTML;
+        fetch(`/edit_message/${messageId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `new_content=${encodeURIComponent(newContent)}`,
+        }).then(response => {
+            if (response.ok) {
+                messageDiv.contentEditable = false;
+                button.textContent = '🖉';
+                button.classList.add('edit-button');
+                button.classList.remove('save-button');
+                // return response.json();
+                //reload
+                location.reload();
+            }
+        })
+            // .then((data) => {
+            //     clearMap();
+            //     data.forEach((node) => {
+            //         addToTree(node);
+            //     });
+            //     repaintMap();
+            // });
+    }
+
     // Enviar mensaje con Ctrl+Enter
     textarea.addEventListener('keydown', function (e) {
         if (e.ctrlKey && e.key === 'Enter') {
@@ -11,16 +40,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Editar mensaje
+    // Editar o guardar mensaje
     editButtons.forEach(button => {
         button.addEventListener('click', function () {
-            const messageDiv = this.parentElement;
-            const contentDiv = messageDiv.querySelector('.message-content');
-            contentDiv.contentEditable = true;
-            contentDiv.focus();
-            this.textContent = 'Save';
-            this.classList.add('save-button');
-            this.classList.remove('edit-button');
+            const messageDiv = button.previousElementSibling;
+            if (messageDiv.contentEditable === 'true') {
+                saveMessage(messageDiv, button);
+            } else {
+                messageDiv.contentEditable = true;
+                messageDiv.focus();
+                button.textContent = '🖫';
+                button.classList.add('save-button');
+                button.classList.remove('edit-button');
+            }
         });
     });
 
@@ -28,23 +60,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function (e) {
         if (e.ctrlKey && e.key === 'Enter' && e.target.contentEditable === 'true') {
             e.preventDefault();
-            const messageDiv = e.target.parentElement;
-            const messageId = messageDiv.getAttribute('data-id');
-            const newContent = e.target.innerHTML;
-            fetch(`/edit_message/${messageId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `content=${encodeURIComponent(newContent)}`,
-            }).then(response => {
-                if (response.ok) {
-                    e.target.contentEditable = false;
-                    messageDiv.querySelector('.edit-button').textContent = 'Edit';
-                    messageDiv.querySelector('.edit-button').classList.add('edit-button');
-                    messageDiv.querySelector('.edit-button').classList.remove('save-button');
-                }
-            });
+            const messageDiv = e.target;
+            saveMessage(messageDiv, messageDiv.nextElementSibling);
         }
     });
 });

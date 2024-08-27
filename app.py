@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from models import db, User, Chat, ChatNickname, Message, Bot
+from pyexpat.errors import messages
+
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from models import db, User, Chat, ChatNickname, Message, Bot, Branch, RootMessage
 from openai import OpenAI
 from dotenv import load_dotenv
+from db_operations import submit_message, get_chat_by_message, edit_message as edit_msg, load_messages
 load_dotenv()
 
 client = OpenAI()
@@ -17,6 +20,31 @@ def obtener_respuesta(prompt):
     respuesta_texto = response.choices[0].text.strip()
     return respuesta_texto
 
+def message_is_in_active_branch(message):
+    # check if message is in the list of all messages in the active branch
+    chat = get_chat_by_message(message)
+    active_branch = chat.current_branch
+    if not active_branch:
+        return False
+    tip_message = active_branch.tip_message
+    while tip_message:
+        if tip_message == message:
+            return True
+        tip_message = tip_message.parent_message
+    return False
+
+def generateTree(chat):
+    msgs = [rm.message for rm in chat.root_messages]
+    tree = []
+    for msg in msgs:
+        tree.append({"id": msg.id, "childs": getChildren(msg), "active": message_is_in_active_branch(msg)})
+    return tree
+
+def getChildren(msg):
+    if msg.replies:
+        return [{"id": reply.id, "childs": getChildren(reply), "active": message_is_in_active_branch(reply)} for reply in msg.replies]
+    return []
+
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta'
@@ -27,7 +55,11 @@ app.secret_key = 'tu_clave_secreta'
 def index():
     user_id = session.get('user_id')
     if user_id:
-        user = User.get_by_id(user_id)
+        try:
+            user = User.get_by_id(user_id)
+        except User.DoesNotExist:
+            session.pop('user_id')
+            return redirect(url_for('index'))
         chats = Chat.select().join(ChatNickname).where(ChatNickname.user == user)
         return render_template('index.html', user=user, chats=chats)
     return render_template('index.html')
@@ -68,44 +100,45 @@ def create_bot():
 @app.route('/chat/<int:chat_id>', methods=['GET', 'POST'])
 def chat(chat_id):
     chat = Chat.get_by_id(chat_id)
-    if request.method != 'POST':
-        bots = Bot.select()
-        messages = Message.select().where(Message.chat == chat)
-
-        for message in messages:
-            message.content = ''.join(f'<div>{line}</div>' for line in message.content.split('\n'))
-
-        nickname = ChatNickname.get(ChatNickname.user == User.get_by_id(session.get('user_id')), ChatNickname.chat == chat).nickname
-
-        return render_template('chat.html', chat=chat, messages=messages, bots=bots, nickname=nickname)
-    content = request.form['content']
-    # Enviar mensaje desde un bot si se solicita
-    if ((bot_username := request.form.get('bot_username')) and
-            (bot_user := User.get(User.username == bot_username)) and
-            (bot := Bot.get(Bot.user == bot_user))):
-        chat_str = '\n'.join(f'{message.user.username}: {message.content}' for message in Message.select().where(Message.chat == chat))
-        content = f'\n{content}\n' if content else '\n'
-        prompt = f'{bot.personality}\n\n{chat_str}{content}{bot_user.username}:'
-        response = obtener_respuesta(prompt)
-        Message.create(chat=chat, user=bot_user, content=response)
-    else:
-        Message.create(chat=chat, user=User.get_by_id(session.get('user_id')), content=content)
-    return redirect(url_for('chat', chat_id=chat_id))
+    if request.method == 'POST':
+        user_id = int(request.form.get('user_id'))
+        content = request.form.get('content')
+        submit_message(chat_id, user_id, content)
+        return redirect(url_for('chat', chat_id=chat_id))
+    messages = load_messages(chat_id)
+    user = User.get_by_id(session['user_id'])
+    nickname = ChatNickname.get(ChatNickname.chat == chat, ChatNickname.user == user).nickname
+    bots = Bot.select()
+    tree = generateTree(chat)
+    return render_template('chat.html', chat=chat, messages=messages, nickname=nickname, bots=bots, user=user, tree=tree)
 
 
 @app.route('/edit_message/<int:message_id>', methods=['POST'])
 def edit_message(message_id):
-    new_content = request.form['content']
-    message = Message.get_by_id(message_id)
-    # Convierte <div> tags a saltos de línea
-    message.content = new_content.replace('</div>', '\n').replace('<div>', '')
-    # Elimina cualquier salto de línea adicional al final del contenido
-    message.content = message.content.rstrip('\n')
-    message.save()
-    return 'Message updated', 200
+    new_content = request.form.get('new_content')
+    message = edit_msg(message_id, new_content)
+    return jsonify(True)
 
+
+@app.route('/change_chat_branch/<int:tip_message_id>', methods=['POST'])
+def change_chat_branch(tip_message_id):
+    chat = get_chat_by_message(Message.get_by_id(tip_message_id))
+    chat.current_branch = Branch.get(Branch.tip_message == Message.get_by_id(tip_message_id))
+    chat.save()
+    return jsonify(True)
 
 if __name__ == '__main__':
     db.connect()
-    db.create_tables([User, Chat, ChatNickname, Message, Bot])
+    db.create_tables([User, Chat, ChatNickname, Message, Bot, Branch, RootMessage])
     app.run(debug=True)
+
+"""
+function addToTree(msg) {
+    const room = automaticRoom();
+    const roomElement = document.getElementById(`room-${room.x}-${room.y}`);
+    roomElement.textContent = msg.id;
+    msg.childs.forEach(child => {
+        addToTree(child);
+    });
+}
+"""
