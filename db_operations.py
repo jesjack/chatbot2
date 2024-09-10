@@ -1,4 +1,4 @@
-from models import Chat, User, Message, Branch, RootMessage
+from models import Chat, User, Message, Branch, RootMessage, ChatNickname
 
 
 def submit_message(chat_id, user_id, content):
@@ -45,4 +45,9 @@ def load_messages(chat_id):
     while parent_message:
         messages.append(parent_message)
         parent_message = parent_message.parent_message
+    for message in messages:
+        try:
+            message.user.username = ChatNickname.get(ChatNickname.user == message.user, ChatNickname.chat == chat_id).nickname
+        except ChatNickname.DoesNotExist:
+            pass
     return messages[::-1]

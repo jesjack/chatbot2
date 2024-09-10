@@ -3,35 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ chat.title }}</title>
+    <script src="https://kit.fontawesome.com/54bc92731d.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='messages.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='map.css') }}">
 </head>
 <body>
-    <h1>Chat: {{ chat.title }}</h1>
-
     <main>
-        <form id="message-form" method="post">
-            <div id="messages">
-                {% for message in messages %}
-                    <strong>{{ message.user.username }}:</strong>
-                    <div class="message-content" contenteditable="false" data-id="{{ message.id }}">{{ message.content|safe }}</div>
-                    <button class="edit-button" type="button">🖉</button>
-                {% endfor %}
-                <select id="bot_username" name="user_id">
-                    <option value="{{ user.id }}">{{ nickname }}:</option>
-                    {% for bot in bots %}
-                        <option value="{{ bot.user.id }}">{{ bot.user.username }}:</option>
+        <div>
+            <form id="message-form" method="post">
+                <div id="messages">
+                    <div>
+                        <a href="/">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </a>
+                        <h3>{{ chat.title }}</h3>
+                    </div>
+                    {% for message in messages %}
+                        <strong>{{ message.user.username }}</strong>
+                        <div class="message-content" contenteditable="false" data-id="{{ message.id }}">{{ message.content|safe }}</div>
+                        <button class="edit-button" type="button"><i class="fa-solid fa-pen-nib"></i></button>
                     {% endfor %}
-                </select>
-                <textarea id="content" name="content" class="message-content"></textarea>
-                <button type="submit">→</button>
+                    <select id="bot_username" name="user_id" class="in-the-bottom">
+                        <option value="{{ user.id }}">{{ nickname }}</option>
+                        {% for bot in bots %}
+                            <option value="{{ bot.user.id }}">{{ bot.user.username }}</option>
+                        {% endfor %}
+                        <option value="new_bot">Nuevo bot</option>
+                    </select>
+                    <textarea id="content" name="content" class="message-content in-the-bottom"></textarea>
+                    <button type="submit" class="in-the-bottom"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </form>
+            <div>
+                <div class="map" id="map"></div>
             </div>
-        </form>
-        <div class="map" id="map">
-
         </div>
     </main>
-    <p><a href="{{ url_for('create_bot') }}">Crear un nuevo bot</a></p>
+{#    <p><a href="{{ url_for('create_bot') }}">Crear un nuevo bot</a></p>#}
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="{{ url_for('static', filename='arrow.js') }}"></script>
     <script src="{{ url_for('static', filename='map.js') }}"></script>

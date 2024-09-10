@@ -109,7 +109,8 @@ function createArrowBetweenElements(id1, id2, arrowColor = '#00000033') {
 
     window.addEventListener('resize', updateArrowPosition);
     window.addEventListener('scroll', updateArrowPosition);
-    updateArrowPosition();
+    window.addEventListener('load', updateArrowPosition);
+    document.addEventListener('DOMContentLoaded', updateArrowPosition);
 }
 
 function clearArrows() {

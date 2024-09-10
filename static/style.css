@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+
+body {
+  /*font-family: 'Tu-Fuente-Preferida', sans-serif;*/
+  font-family: "Ubuntu", sans-serif;
+
+  /* Aumentar el tamaño de fuente en dispositivos móviles */
+  @media only screen and (max-width: 1000px) {
+    font-size: 30px; /* Aumenta el tamaño de fuente en móviles */
+  }
+}
+
+/* Mantener las fuentes monoespaciadas para code y pre */
+code, pre, kbd, samp {
+    font-family: monospace;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  main {
+    border: 1px solid #000;
+    border-radius: .5em;
+  }
+}

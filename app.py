@@ -1,12 +1,12 @@
-from pyexpat.errors import messages
-
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from models import db, User, Chat, ChatNickname, Message, Bot, Branch, RootMessage
 from openai import OpenAI
 from dotenv import load_dotenv
 from db_operations import submit_message, get_chat_by_message, edit_message as edit_msg, load_messages
-load_dotenv()
+import socket
 
+
+load_dotenv()
 client = OpenAI()
 
 
@@ -97,13 +97,35 @@ def create_bot():
 
 
 # Página de chat
+def get_name(user, chat):
+    try:
+        ch_nick = ChatNickname.get(ChatNickname.user == user, ChatNickname.chat == chat)
+        return ch_nick.nickname
+    except ChatNickname.DoesNotExist:
+        return user.username
+
+
+def generate_response(content, chat_id, user_id):
+    chat = Chat.get_by_id(chat_id)
+    messages = load_messages(chat_id)
+    prompt = '\n'.join([f"{get_name(msg.user, chat)}: {msg.content}" for msg in messages]) + '\n\n'
+    user = User.get_by_id(user_id)
+    prompt += user.bot_profile.first().personality + '\n\n'
+    prompt += content + '\n\n'
+    prompt += f"{get_name(user, chat)}:"
+    response = obtener_respuesta(prompt)
+    submit_message(chat_id, user_id, response)
+
+
 @app.route('/chat/<int:chat_id>', methods=['GET', 'POST'])
 def chat(chat_id):
     chat = Chat.get_by_id(chat_id)
     if request.method == 'POST':
         user_id = int(request.form.get('user_id'))
+        user = User.get_by_id(user_id)
         content = request.form.get('content')
-        submit_message(chat_id, user_id, content)
+        if user.bot_profile: generate_response(content, chat_id, user_id)
+        else: submit_message(chat_id, user_id, content)
         return redirect(url_for('chat', chat_id=chat_id))
     messages = load_messages(chat_id)
     user = User.get_by_id(session['user_id'])
@@ -127,18 +149,25 @@ def change_chat_branch(tip_message_id):
     chat.save()
     return jsonify(True)
 
+
+def get_local_ip():
+    # Crear un socket temporal para determinar la IP local
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # No se envía nada, simplemente usamos esto para determinar la IP
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
 if __name__ == '__main__':
     db.connect()
     db.create_tables([User, Chat, ChatNickname, Message, Bot, Branch, RootMessage])
-    app.run(debug=True)
+    host = '0.0.0.0'
 
-"""
-function addToTree(msg) {
-    const room = automaticRoom();
-    const roomElement = document.getElementById(`room-${room.x}-${room.y}`);
-    roomElement.textContent = msg.id;
-    msg.childs.forEach(child => {
-        addToTree(child);
-    });
-}
-"""
+    # Ejecutar la aplicación Flask
+    app.run(debug=True, host=host)

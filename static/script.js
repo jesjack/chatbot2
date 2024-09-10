@@ -15,21 +15,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(response => {
             if (response.ok) {
                 messageDiv.contentEditable = false;
-                button.textContent = '🖉';
+                button.innerHTML = '<i class="fa-solid fa-pen-nib"></i>';
                 button.classList.add('edit-button');
                 button.classList.remove('save-button');
                 // return response.json();
-                //reload
                 location.reload();
             }
         })
-            // .then((data) => {
-            //     clearMap();
-            //     data.forEach((node) => {
-            //         addToTree(node);
-            //     });
-            //     repaintMap();
-            // });
     }
 
     // Enviar mensaje con Ctrl+Enter
@@ -49,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 messageDiv.contentEditable = true;
                 messageDiv.focus();
-                button.textContent = '🖫';
+                button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>';
                 button.classList.add('save-button');
                 button.classList.remove('edit-button');
             }
@@ -62,6 +54,12 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const messageDiv = e.target;
             saveMessage(messageDiv, messageDiv.nextElementSibling);
+        }
+    });
+
+    document.querySelector('#bot_username').addEventListener('change', function (event) {
+        if (event.target.value === 'new_bot') {
+            window.location.href = '/create_bot';
         }
     });
 });

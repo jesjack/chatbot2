@@ -3,24 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <title>Chat App</title>
+    <script src="https://kit.fontawesome.com/54bc92731d.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Bienvenido a la aplicación de chat</h1>
-    <ul>
-        <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
-        <li><a href="{{ url_for('create_chat') }}">Crear un chat</a></li>
-        <li><a href="{{ url_for('create_bot') }}">Crear un bot</a></li>
-    </ul>
 
-    {% if chats %}
-        <h2>Chats en los que participas:</h2>
-        <ul>
-            {% for chat in chats %}
-                <li><a href="{{ url_for('chat', chat_id=chat.id) }}">{{ chat.title }}</a></li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No participas en ningún chat.</p>
-    {% endif %}
+    <div class="container">
+        <main>
+
+            <h1>Bienvenido a la aplicación de chat</h1>
+            <ul>
+                <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
+                <li><a href="{{ url_for('create_chat') }}">Crear un chat</a></li>
+                <li><a href="{{ url_for('create_bot') }}">Crear un bot</a></li>
+            </ul>
+
+            {% if chats %}
+                <h2>Chats en los que participas:</h2>
+                <ul>
+                    {% for chat in chats %}
+                        <li><a href="{{ url_for('chat', chat_id=chat.id) }}">{{ chat.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No participas en ningún chat.</p>
+            {% endif %}
+
+        </main>
+    </div>
 </body>
 </html>

@@ -14,7 +14,7 @@ class User(BaseModel):
 
 # Modelo para los bots
 class Bot(BaseModel):
-    user = ForeignKeyField(User, backref='bot_profile')  # Relación con el usuario
+    user = ForeignKeyField(User, backref='bot_profile', unique=True)  # Usuario asociado
     personality = TextField()  # Ficha de personaje: descripción de la personalidad
 
 # Modelo para los mensajes
